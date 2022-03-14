@@ -18,7 +18,6 @@ def tcp_create_connect_socket():
     except ConnectionRefusedError:
         print(colored('Server unavailable', 'red'))
         raise SystemExit
-    # _, tcp_port = s.getsockname()
 
     return s
 
@@ -38,13 +37,13 @@ def chose_a_nickname():
 def receive():
     while True:
         try:
-            msg = client_socket.recvfrom(bytes_no).decode('ascii')
+            msg = client_socket.recv(bytes_no).decode('ascii')
             if msg == 'NICK':
                 client_socket.send(nick.encode('ascii'))
             else:
                 print(msg)
-        except:
-            print("Error")
+        except Exception as e:
+            print(f'[CLIENT] [receive] Error: {e}')
             client_socket.close()
             break
 
@@ -52,7 +51,7 @@ def receive():
 def write():
     while True:
         msg = f'{nick}: {input("")}'
-        client_socket.send(msg.encode(('ascii')))
+        client_socket.send(msg.encode('ascii'))
 
 
 if __name__ == '__main__':
