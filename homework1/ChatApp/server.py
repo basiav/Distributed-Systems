@@ -4,7 +4,7 @@ from threading import Thread
 import config
 from termcolor import colored
 
-protocol = socket.IPPROTO_TCP
+tcp_protocol = socket.IPPROTO_TCP
 bytes_no = config.bytes_no
 active_connections = 5
 
@@ -13,7 +13,7 @@ clients = []
 
 def tcp_create_bind_socket():
     import socket
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM, protocol)
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM, tcp_protocol)
 
     try:
         s.bind(config.server_address)
