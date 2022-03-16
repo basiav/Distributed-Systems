@@ -40,7 +40,7 @@ def receive_tcp():
             if tcp_msg == 'NICK':
                 tcp_socket.sendall(nick.encode('ascii'))
             else:
-                print(colored(f'[TCP MSG]: {tcp_msg}', 'green'))
+                print(colored(f'[TCP MSG]: {tcp_msg}', 'yellow'))
 
         except Exception as e:
             print(f'[CLIENT] [receive_tcp] Error: {e}')
@@ -54,7 +54,7 @@ def receive_udp():
             udp_msg = udp_socket.recv(bytes_no).decode('ascii')
 
             if udp_msg:
-                print(colored(f'[UDP msg received]: {udp_msg}', 'yellow'))
+                print(colored(f'[UDP msg received]: {udp_msg}', 'blue'))
 
         except Exception as e:
             print(f'[CLIENT] [receive_udp] Error: {e}')

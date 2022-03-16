@@ -4,7 +4,7 @@ import threading
 from threading import Thread
 import sys
 
-import config
+import config, utils
 from termcolor import colored
 import colorama
 
@@ -71,19 +71,24 @@ def handle_client(connection, client_address):
 
 def tcp_accept_connection(server_socket):
     while True:
-        connection, client_address = server_socket.accept()
-        connection.sendall('NICK'.encode('ascii'))
-        nickname = connection.recv(bytes_no).decode('ascii')
+        try:
+            connection, client_address = server_socket.accept()
+            connection.sendall('NICK'.encode('ascii'))
+            nickname = connection.recv(bytes_no).decode('ascii')
 
-        if len(clients) < config.max_clients:
-            client_thread = Thread(target=handle_client, args=(connection, client_address))
-            client_thread.start()
-            clients[client_address] = connection
-            nicknames[client_address] = nickname
-        else:
-            exit_connection(connection)
-            ip, port = client_address
-            print(colored(f'Connection from {ip}:{port} denied, too many clients', 'red'))
+            if len(clients) < config.max_clients:
+                client_thread = Thread(target=handle_client, args=(connection, client_address))
+                client_thread.start()
+                clients[client_address] = connection
+                nicknames[client_address] = nickname
+            else:
+                exit_connection(connection)
+                ip, port = client_address
+                print(colored(f'Connection from {ip}:{port} denied, too many clients', 'red'))
+
+        except OSError:
+            exit_connection(tcp_socket)
+            return
 
 
 def receive_udp(udp_socket):
@@ -106,20 +111,24 @@ def receive_udp(udp_socket):
 
 def listen_on_commands():
     quit_commands = ['Exit', 'exit', 'q', 'quit']
-    try:
-        for line in sys.stdin:
-            if any(c in line.rstrip() for c in quit_commands):
+    while True:
+        try:
+            for line in sys.stdin:
+                if any(c in line.rstrip() for c in quit_commands):
+                    print(colored('[SERVER] Quitting, bye...', 'orange'))
+                    exit_connection(tcp_socket)
+                    exit_connection(udp_socket)
+                    sys.exit(0)
+        except KeyboardInterrupt:
+            print(colored('[SERVER] Interrupted', 'red'))
+            try:
                 exit_connection(tcp_socket)
                 exit_connection(udp_socket)
                 sys.exit(0)
-    except KeyboardInterrupt:
-        print(colored('Interrupted', 'red'))
-        try:
-            exit_connection(tcp_socket)
-            exit_connection(udp_socket)
-            sys.exit(0)
-        except SystemExit:
-            os._exit(0)
+            except Exception as e:
+                print(colored(f'[SERVER] [listen_on_commands] Error: {e}', 'red'))
+            except SystemExit:
+                os._exit(0)
 
 
 def create_activate_tcp_connection_thread(tcp_socket):
@@ -128,10 +137,6 @@ def create_activate_tcp_connection_thread(tcp_socket):
 
 def create_udp_thread(udp_socket):
     Thread(target=receive_udp, args=(udp_socket,)).start()
-
-
-def create_commands_thread():
-    Thread(target=listen_on_commands).start()
 
 
 def broadcast(message, connection):
@@ -147,8 +152,7 @@ def broadcast(message, connection):
 
 def exit_connection(connection):
     try:
-        tcp_socket.shutdown(socket.SHUT_RDWR)
-        udp_socket.shutdown(socket.SHUT_RDWR)
+        connection.shutdown(socket.SHUT_RDWR)
     except Exception as e:
         print(f'[SERVER] [exit_connection] Error: {e}')
 
@@ -178,5 +182,6 @@ if __name__ == '__main__':
     udp_socket = udp_create_bind_socket()
     create_udp_thread(udp_socket)
 
-    create_commands_thread()
+    listen_on_commands()
+
     join_threads()
