@@ -4,7 +4,7 @@ import threading
 from threading import Thread
 import sys
 
-import config, utils
+import config
 from termcolor import colored
 import colorama
 
@@ -109,28 +109,6 @@ def receive_udp(udp_socket):
                     continue
 
 
-def listen_on_commands():
-    quit_commands = ['Exit', 'exit', 'q', 'quit']
-    while True:
-        try:
-            for line in sys.stdin:
-                if any(c in line.rstrip() for c in quit_commands):
-                    print(colored('[SERVER] Quitting, bye...', 'orange'))
-                    exit_connection(tcp_socket)
-                    exit_connection(udp_socket)
-                    sys.exit(0)
-        except KeyboardInterrupt:
-            print(colored('[SERVER] Interrupted', 'red'))
-            try:
-                exit_connection(tcp_socket)
-                exit_connection(udp_socket)
-                sys.exit(0)
-            except Exception as e:
-                print(colored(f'[SERVER] [listen_on_commands] Error: {e}', 'red'))
-            except SystemExit:
-                os._exit(0)
-
-
 def create_activate_tcp_connection_thread(tcp_socket):
     Thread(target=tcp_accept_connection, args=(tcp_socket,)).start()
 
@@ -148,6 +126,30 @@ def broadcast(message, connection):
                 print(colored(f'[SERVER] [broadcast] {e}', 'red'))
                 exit_connection(connection)
                 remove(c)
+
+
+def listen_on_commands():
+    quit_commands = ['Exit', 'exit', 'q', 'quit']
+    while True:
+        try:
+            for line in sys.stdin:
+                if any(c in line.rstrip() for c in quit_commands):
+                    print(colored('[SERVER] Quitting, bye...', 'magenta'))
+                    exit_connection(tcp_socket)
+                    exit_connection(udp_socket)
+                    sys.exit(0)
+        except KeyboardInterrupt:
+            print(colored('[SERVER] Interrupted', 'red'))
+            try:
+                exit_connection(tcp_socket)
+                exit_connection(udp_socket)
+                sys.exit(0)
+            except Exception as e:
+                print(colored(f'[SERVER] [listen_on_commands] Error: {e}', 'red'))
+            except SystemExit:
+                os._exit(0)
+        except Exception as e:
+            print(colored(f'[SERVER] [listen_on_commands] Error: {e}', 'red'))
 
 
 def exit_connection(connection):
