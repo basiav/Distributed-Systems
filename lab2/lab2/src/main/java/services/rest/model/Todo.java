@@ -20,6 +20,8 @@ public class Todo {
         this.id = id;
     }
 
+    public String getId() { return id; }
+
     public String getSummary() {
         return summary;
     }

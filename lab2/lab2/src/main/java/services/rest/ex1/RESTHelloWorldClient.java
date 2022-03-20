@@ -1,4 +1,4 @@
-package services.rest;
+package services.rest.ex1;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;

@@ -1,4 +1,4 @@
-package services.rest;
+package services.rest.ex2;
 
 import services.rest.model.Todo;
 

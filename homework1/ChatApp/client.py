@@ -5,6 +5,7 @@ from termcolor import colored
 import colorama
 
 import config
+import utils
 
 colorama.init()
 
@@ -45,7 +46,7 @@ def receive_tcp():
         except Exception as e:
             print(f'[CLIENT] [receive_tcp] Error: {e}')
             tcp_socket.close()
-            break
+            return
 
 
 def receive_udp():
@@ -59,7 +60,7 @@ def receive_udp():
         except Exception as e:
             print(f'[CLIENT] [receive_udp] Error: {e}')
             udp_socket.close()
-            break
+            return
 
 
 def write():
@@ -82,6 +83,15 @@ def chose_a_nickname():
     return nickname
 
 
+def exit_connection(connection):
+    try:
+        connection.shutdown(socket.SHUT_RDWR)
+    except Exception as e:
+        print(f'[CLIENT] [exit_connection] Error: {e}')
+
+    connection.close()
+
+
 if __name__ == '__main__':
     print('Python Chat Client')
     print('Press Ctrl+C to exit')
@@ -100,3 +110,7 @@ if __name__ == '__main__':
 
     write_thread = Thread(target=write)
     write_thread.start()
+
+    utils.listen_on_quitting_commands(lambda: exit_connection(tcp_socket), lambda: exit_connection(udp_socket))
+
+    utils.join_threads()

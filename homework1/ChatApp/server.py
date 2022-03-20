@@ -8,6 +8,8 @@ import config
 from termcolor import colored
 import colorama
 
+import utils
+
 colorama.init()
 
 tcp_protocol = socket.IPPROTO_TCP
@@ -128,30 +130,6 @@ def broadcast(message, connection):
                 remove(c)
 
 
-def listen_on_commands():
-    quit_commands = ['Exit', 'exit', 'q', 'quit']
-    while True:
-        try:
-            for line in sys.stdin:
-                if any(c in line.rstrip() for c in quit_commands):
-                    print(colored('[SERVER] Quitting, bye...', 'magenta'))
-                    exit_connection(tcp_socket)
-                    exit_connection(udp_socket)
-                    sys.exit(0)
-        except KeyboardInterrupt:
-            print(colored('[SERVER] Interrupted', 'red'))
-            try:
-                exit_connection(tcp_socket)
-                exit_connection(udp_socket)
-                sys.exit(0)
-            except Exception as e:
-                print(colored(f'[SERVER] [listen_on_commands] Error: {e}', 'red'))
-            except SystemExit:
-                os._exit(0)
-        except Exception as e:
-            print(colored(f'[SERVER] [listen_on_commands] Error: {e}', 'red'))
-
-
 def exit_connection(connection):
     try:
         connection.shutdown(socket.SHUT_RDWR)
@@ -167,12 +145,6 @@ def remove(connection):
         del clients[connection]
 
 
-def join_threads():
-    for thread in threading.enumerate():
-        if thread != threading.main_thread():
-            thread.join()
-
-
 if __name__ == '__main__':
     print('Python Chat Server')
     print('Press Ctrl+C to exit')
@@ -184,6 +156,6 @@ if __name__ == '__main__':
     udp_socket = udp_create_bind_socket()
     create_udp_thread(udp_socket)
 
-    listen_on_commands()
+    utils.listen_on_quitting_commands(lambda: exit_connection(tcp_socket), lambda: exit_connection(udp_socket))
 
-    join_threads()
+    utils.join_threads()
