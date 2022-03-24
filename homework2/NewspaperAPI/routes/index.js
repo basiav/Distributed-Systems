@@ -5,8 +5,14 @@ const request = require("request");
 // const livereload = require("livereload");
 const router = express.Router();
 const locals = require("express/lib/application").locals;
+// colouring console.logged font
+const clc = require('cli-color');
+const config = require("../config");
 
 let title = "Welcome to NewspaperAPI";
+let country;
+const newspapers = config.newspapers;
+let articles = [];
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
@@ -14,47 +20,23 @@ router.get('/', function(req, res, next) {
   next()
 });
 
-let country;
-
+/* POST newspapers requests by country name */
 router.post('/postCountryRequest', (req, res) => {
-  // res.render('index', {welcomeTitle: req.body.country});
   country = req.body.country;
   articles = [];
-  // console.log("RES DATA: ", res.data);
-  // loadNews()
-  //     .then(() => {
-  //     console.log("ARTICLES for country: ", country, articles);
-  //     console.log("Articles length: ", articles.length);
-  //     res.render('articles', {country: req.body.country, articles: articles});
-  //     })
-  //     .catch(err => {
-  //         console.log("ERROR: ", err);
-  //     });
-  // res.render('index', {welcomeTitle: title});
-    loadNews(req, res);
+
+  loadNews(req, res)
+    .then(res => {
+        let msg = "\nArticles successfully fetched. Response: " + res + " \nArticles number: " + articles.length + " \n";
+        logMessage("[POST] [/postCountryRequest]", msg, "success");
+    })
+    .catch(err => {
+        let msg = "\n[POST] ERROR: " + err;
+        logMessage("[POST] [/postCountryRequest]", msg, "error");
+    });
 })
 
-const newspapers = [
-    {
-        name: 'guardian',
-        address: 'https://www.theguardian.com/world/ukraine',
-        base: ''
-    },
-    {
-        name: 'guardian',
-        address: 'https://www.theguardian.com/international',
-        base: ''
-    },
-    {
-        name: 'the times',
-        address: 'https://www.thetimes.co.uk/',
-        base: 'https://www.thetimes.co.uk'
-    }
-]
-let articles = []
-
-// function getNewspaperPromise
-
+/* returns an array of promises, where each promise corresponds to a different newspaper URL */
 function loadNewsPromises(){
     const newspaperPromises = [];
     newspapers.forEach(newspaper => {
@@ -79,7 +61,8 @@ function loadNewsPromises(){
                     resolve();
                 })
                 .catch((err) => {
-                    console.log("Error: ", err)
+                    let msg = "\n[loadNewsPromises] ERROR: " + err;
+                    logMessage("[loadNewsPromises] ", msg, "error");
                     reject("Error: ", err);
                 });
         });
@@ -88,53 +71,38 @@ function loadNewsPromises(){
     return newspaperPromises;
 }
 
-function fun() {
-    axios.get('ws://localhost:3000')
-        .then(response => {
-            const html = response.data
-            const $ = cheerio.load(html)
-            // console.log("HTML", html)
-            // $('h1.title').text('Hi')
-            // $('h1.title', html).text("Hi")
-            $('.welcome').each((i, el) => {
-                console.log("i: ", i);
-                const title = $(el)
-                    .text();
-
-                $(el).html("Hi")
-                console.log("[Before] ", title, " [After] ", $(el).text());
-            });
-            console.log($('h1').text());
-            title = $('h1').text();
-        })
-        .catch(e => {
-            console.log("ERROR: ", e);
-        });
-}
-
+/* Loads data to the articles array */
 async function loadNews(req, res) {
-    // await Promise.all([getNews]);
-    //   Promise.all([getNews]).then(values => {
-    //       console.log("Values: ", values);
-    //   });
-    let newspaperPromises = loadNewsPromises();
-    // Promise.allSettled([newspaperPromises])
-    //     .then((results) => {
-    //         results.forEach((result) => {
-    //             console.log(result.status);
-    //         });
-    //         console.log("Articles length: ", articles.length);
-    //         // res.render('articles', {country: req.body.country, articles: articles});
-    // });
+    let newspaperPromises = loadNewsPromises(req, res);
     console.log("Loading news for country ... ", country);
+
     for (const promise of newspaperPromises) {
-        await promise;
+        try {
+            await promise;
+        } catch (err) {
+            let msg = "\n[loadNews] ERROR: " + err;
+            logMessage("[loadNews] ", msg, "error");
+        }
     }
+
     res.render('articles', {country: req.body.country, articles: articles});
-    console.log("Articles length: ", articles.length);
     console.log("ARTICLES", articles);
 }
 
+function logMessage(location, msg, status, file) {
+    file = file || "index.js";
+    switch(status) {
+        case "success":
+            console.log(clc.green(file, location, msg));
+            break;
+        case "error":
+            console.log(clc.red(file, location, msg));
+            break;
+        default:
+            console.log('[%s] %s %s', file, location, msg);
+            break;
+    }
+}
 
 
 module.exports = router;

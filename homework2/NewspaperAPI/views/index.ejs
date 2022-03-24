@@ -10,6 +10,7 @@
     <link rel="icon" type="image/x-icon" href="favicon.ico">
 </head>
 <body>
+    <%-include('./include/nav.ejs')%>
     <h1 class="welcome"><%=locals.welcomeTitle%></h1>
     <%=locals.text%>
     <form action="/postCountryRequest" method="POST">
