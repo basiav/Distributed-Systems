@@ -90,7 +90,6 @@ function loadNewsByCountryPromises(){
 
 /* returns an array of promises, where each promise corresponds to a different newspaper URL */
 function loadNewsByNamePromises(){
-    console.log("CHOSEN NEWSPAPER")
     const newspaperPromises = [];
     newspapers
         .filter(newspaper => newspaper.name === chosenNewspaper)
@@ -157,7 +156,8 @@ async function loadNewsByNewspaperName(req, res) {
         }
     }
 
-    res.render('articles', {country: req.body.country, articles: articles});
+    res.render('articles', {country: req.body.country, articles: articles, chosenNewspaper: chosenNewspaper});
+    chosenNewspaper = null;
     console.log("ARTICLES", articles);
 }
 

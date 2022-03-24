@@ -12,6 +12,7 @@
 <body>
     <%-include('./include/nav.ejs')%>
     <h1><%=locals.country%></h1>
+    <h2><%=locals.chosenNewspaper%></h2>
     <h2>Articles number: <%=locals.articles.length%></h2>
     <% if (locals.articles.length > 0 && locals.articles) { %>
     <% locals.articles.forEach(item => { %>
