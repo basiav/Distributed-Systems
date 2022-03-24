@@ -17,17 +17,20 @@ router.get('/', function(req, res, next) {
 let country;
 
 router.post('/postCountryRequest', (req, res) => {
-  res.render('index', {welcomeTitle: req.body.country});
+  // res.render('index', {welcomeTitle: req.body.country});
   country = req.body.country;
   articles = [];
   // console.log("RES DATA: ", res.data);
   loadNews()
-      // .then(() => {
-      // console.log("ARTICLES for country: ", country, articles);
-      // })
-      // .catch(err => {
-      //     console.log("ERROR: ", err);
-      // });
+      .then(() => {
+      console.log("ARTICLES for country: ", country, articles);
+      console.log("Articles length: ", articles.length);
+      res.render('articles', {country: req.body.country, articles: articles});
+      })
+      .catch(err => {
+          console.log("ERROR: ", err);
+      });
+  // res.render('index', {welcomeTitle: title});
 })
 
 const newspapers = [
@@ -40,39 +43,14 @@ const newspapers = [
         name: 'guardian',
         address: 'https://www.theguardian.com/international',
         base: ''
+    },
+    {
+        name: 'the times',
+        address: 'https://www.thetimes.co.uk/',
+        base: 'https://www.thetimes.co.uk'
     }
 ]
 let articles = []
-
-// let getNews = new Promise((resolve, reject) => {
-//     console.log("GETTING NEWS...");
-//     newspapers.forEach(newspaper => {
-//     axios.get(newspaper.address)
-//         .then(response => {
-//           const html = response.data
-//           const $ = cheerio.load(html)
-//
-//           $("a:contains('" + country + "')", html).each(function () {
-//             console.log($(this).text())
-//             const title = $(this).text()
-//             const url = $(this).attr('href')
-//
-//             articles.push({
-//               title,
-//               url: newspaper.base + url,
-//               source: newspaper.name
-//             })
-//
-//           });
-//           console.log("ARTICLES", articles)
-//           resolve();
-//
-//         })
-//         .catch((err) => {
-//             reject("Error: ", err);
-//         });
-//   });
-// });
 
 function createNews(){
     return new Promise((resolve, reject) => {
@@ -84,7 +62,7 @@ function createNews(){
                     const $ = cheerio.load(html)
 
                     $("a:contains('" + country + "')", html).each(function () {
-                        console.log($(this).text())
+                        // console.log($(this).text())
                         const title = $(this).text()
                         const url = $(this).attr('href')
 
@@ -97,9 +75,9 @@ function createNews(){
                     });
                     console.log("ARTICLES", articles)
                     resolve();
-
                 })
                 .catch((err) => {
+                    console.log("Error: ", err)
                     reject("Error: ", err);
                 });
         });
@@ -107,41 +85,28 @@ function createNews(){
 }
 
 function fun() {
-  axios.get('ws://localhost:3000')
-      .then(response => {
-        const html = response.data
-        const $ = cheerio.load(html)
-        // console.log("HTML", html)
-        // $('h1.title').text('Hi')
-        // $('h1.title', html).text("Hi")
-        $('.welcome').each((i, el) => {
-          console.log("i: ", i);
-          const title = $(el)
-              .text();
+    axios.get('ws://localhost:3000')
+        .then(response => {
+            const html = response.data
+            const $ = cheerio.load(html)
+            // console.log("HTML", html)
+            // $('h1.title').text('Hi')
+            // $('h1.title', html).text("Hi")
+            $('.welcome').each((i, el) => {
+                console.log("i: ", i);
+                const title = $(el)
+                    .text();
 
-          $(el).html("Hi")
-          console.log("[Before] ", title , " [After] ", $(el).text());
+                $(el).html("Hi")
+                console.log("[Before] ", title, " [After] ", $(el).text());
+            });
+            console.log($('h1').text());
+            title = $('h1').text();
+        })
+        .catch(e => {
+            console.log("ERROR: ", e);
         });
-        console.log($('h1').text());
-        title = $('h1').text();
-      })
-      .catch(e => {
-        console.log("ERROR: ", e);
-      });
-
-    // axios.get('ws://localhost:3000')
-    //     .then(response => {
-    //         const html = response.data;
-    //         console.log("HTML ", html)
-    //     })
-    //     .catch(e => {
-    //         console.log("ERROR: ", e);
-    //     });
 }
-
-// setTimeout(() => {
-//     fun();
-// }, 2000)
 
 async function loadNews() {
   // await Promise.all([getNews]);
@@ -151,16 +116,7 @@ async function loadNews() {
     await createNews();
     console.log("Loading news for country ... ", country);
 }
-// loadNews()
 
 
-//
-// // loadNews()
-// router.post('/', () => {
-//   // console.log("post method called")
-//   // loadNews().then(r => console.log("Loaded r", r))
-//   const $ = cheerio.load("../views/index.ejs")
-//   $('h1').text("Hi")
-// })
 
 module.exports = router;
