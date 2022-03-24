@@ -1,18 +1,21 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
+const createError = require('http-errors');
+const express = require('express');
+const path = require('path');
+const cookieParser = require('cookie-parser');
+const logger = require('morgan');
+const request = require("request");
 // Automatic website-page-reloading
-var livereload = require("livereload");
-var connectLiveReload = require("connect-livereload");
+const livereload = require("livereload");
+const connectLiveReload = require("connect-livereload");
+
+const locals = require("express/lib/application").locals;
 
 const PORT = process.env.PORT || 3000
 
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
+const indexRouter = require('./routes/index');
+const usersRouter = require('./routes/users');
 
-var app = express();
+const app = express();
 
 app.use(connectLiveReload());
 
@@ -26,6 +29,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+app.use(express.urlencoded({extended: true}));
 
 app.use('/', indexRouter);
 app.use('/index', indexRouter);
@@ -46,12 +51,13 @@ app.use(function(req, res, next) {
 // error handler
 app.use(function(err, req, res, next) {
   // set locals, only providing error in development
+  errorMsg = err.message;
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
 
   // render the error page
   res.status(err.status || 500);
-  res.render('error');
+  res.render('error', {errorMsg: errorMsg});
 });
 
 module.exports = app;
