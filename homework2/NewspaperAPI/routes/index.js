@@ -21,16 +21,17 @@ router.post('/postCountryRequest', (req, res) => {
   country = req.body.country;
   articles = [];
   // console.log("RES DATA: ", res.data);
-  loadNews()
-      .then(() => {
-      console.log("ARTICLES for country: ", country, articles);
-      console.log("Articles length: ", articles.length);
-      res.render('articles', {country: req.body.country, articles: articles});
-      })
-      .catch(err => {
-          console.log("ERROR: ", err);
-      });
+  // loadNews()
+  //     .then(() => {
+  //     console.log("ARTICLES for country: ", country, articles);
+  //     console.log("Articles length: ", articles.length);
+  //     res.render('articles', {country: req.body.country, articles: articles});
+  //     })
+  //     .catch(err => {
+  //         console.log("ERROR: ", err);
+  //     });
   // res.render('index', {welcomeTitle: title});
+    loadNews(req, res);
 })
 
 const newspapers = [
@@ -52,10 +53,12 @@ const newspapers = [
 ]
 let articles = []
 
-function createNews(){
-    return new Promise((resolve, reject) => {
-        console.log("GETTING NEWS...");
-        newspapers.forEach(newspaper => {
+// function getNewspaperPromise
+
+function loadNewsPromises(){
+    const newspaperPromises = [];
+    newspapers.forEach(newspaper => {
+        let promise = new Promise((resolve, reject) => {
             axios.get(newspaper.address)
                 .then(response => {
                     const html = response.data
@@ -70,10 +73,9 @@ function createNews(){
                             title,
                             url: newspaper.base + url,
                             source: newspaper.name
-                        })
+                        });
 
                     });
-                    console.log("ARTICLES", articles)
                     resolve();
                 })
                 .catch((err) => {
@@ -81,7 +83,9 @@ function createNews(){
                     reject("Error: ", err);
                 });
         });
+        newspaperPromises.push(promise);
     });
+    return newspaperPromises;
 }
 
 function fun() {
@@ -108,13 +112,27 @@ function fun() {
         });
 }
 
-async function loadNews() {
-  // await Promise.all([getNews]);
-  //   Promise.all([getNews]).then(values => {
-  //       console.log("Values: ", values);
-  //   });
-    await createNews();
+async function loadNews(req, res) {
+    // await Promise.all([getNews]);
+    //   Promise.all([getNews]).then(values => {
+    //       console.log("Values: ", values);
+    //   });
+    let newspaperPromises = loadNewsPromises();
+    // Promise.allSettled([newspaperPromises])
+    //     .then((results) => {
+    //         results.forEach((result) => {
+    //             console.log(result.status);
+    //         });
+    //         console.log("Articles length: ", articles.length);
+    //         // res.render('articles', {country: req.body.country, articles: articles});
+    // });
     console.log("Loading news for country ... ", country);
+    for (const promise of newspaperPromises) {
+        await promise;
+    }
+    res.render('articles', {country: req.body.country, articles: articles});
+    console.log("Articles length: ", articles.length);
+    console.log("ARTICLES", articles);
 }
 
 
