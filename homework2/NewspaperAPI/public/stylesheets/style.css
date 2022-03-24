@@ -27,3 +27,17 @@ nav {
   justify-content: space-evenly;
   background-color: bisque;
 }
+
+form {
+  padding: 20px;
+}
+
+.nestedForm {
+  display: flex;
+  flex-direction: column;
+}
+
+.nestedElement {
+  padding: 20px 0 0 0;
+}
+
